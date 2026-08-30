@@ -164,3 +164,19 @@ a { color: inherit; }
 }
 .letter-counts { margin-bottom: 10px; }
 a.btn { text-decoration: none; display: inline-block; }
+
+/* --- search tally --- */
+.tally { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+.tally-item {
+  flex: 1 1 150px; border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; background: var(--bg);
+}
+.tally-unknown { border-style: dashed; border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); background: transparent; }
+.t-n { display: block; font: 600 24px/1.1 var(--mono); letter-spacing: -0.02em; }
+.tally-unknown .t-n { color: var(--warn); }
+.t-l { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
+.matchlist { list-style: none; margin: 10px 0 0; padding: 0; }
+.matchlist li { padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.matchlist li:last-child { border-bottom: 0; }
+.matchlist strong { font-family: var(--mono); }
+.mini { font: 11px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; margin-left: 6px; }
+.mini-qual { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, var(--line)); }

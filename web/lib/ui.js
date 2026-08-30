@@ -139,6 +139,36 @@ export function renderResult(result) {
     return;
   }
 
+  if (result.tool === 'zipcheckup_find_safer_zips') {
+    const ex = result.excluded;
+    el.innerHTML = `
+      <div class="result-head">
+        <strong>${result.match_count_total}</strong>
+        <span class="muted">ZIP codes measured and passing, of ${ex.scanned_in_scope.toLocaleString('en-US')} in scope</span>
+      </div>
+      <div class="tally">
+        <div class="tally-item"><span class="t-n">${result.match_count_total.toLocaleString('en-US')}</span><span class="t-l">measured and passed</span></div>
+        <div class="tally-item"><span class="t-n">${ex.failed_filter.toLocaleString('en-US')}</span><span class="t-l">measured and failed</span></div>
+        <div class="tally-item tally-unknown"><span class="t-n">${ex.unknown_on_a_filtered_metric.toLocaleString('en-US')}</span><span class="t-l">excluded: not measured</span></div>
+      </div>
+      <p class="not-claim">${escapeHtml(result.warning ?? '')}</p>
+      <ul class="matchlist">${result.matches
+        .map(
+          (m) => `<li><strong>${m.zip}</strong> <span class="muted">${escapeHtml([m.place?.city, m.place?.state].filter(Boolean).join(', '))}</span>
+            ${Object.entries(m.metrics ?? {})
+              .filter(([, v]) => v?.status === 'known')
+              .map(
+                ([k, v]) =>
+                  `<span class="mini${v.qualifier ? ' mini-qual' : ''}"${v.qualifier_note ? ` title="${escapeHtml(v.qualifier_note)}"` : ''}>${escapeHtml(
+                    k.replace(/_/g, ' '),
+                  )}: ${escapeHtml(String(v.value))}${v.qualifier === 'reported_as_zero_non_detect' ? ' (non-detect)' : ''}</span>`,
+              )
+              .join('')}</li>`,
+        )
+        .join('')}</ul>`;
+    return;
+  }
+
   if (!result.metrics) {
     el.innerHTML = `<div class="result-head"><strong>${escapeHtml(result.tool ?? 'result')}</strong>
       <span class="muted small">see the JSON below for the full payload</span></div>`;
