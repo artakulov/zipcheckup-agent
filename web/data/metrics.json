@@ -22,7 +22,9 @@
       ],
       "aggregation": {
         "status": "not_documented",
-        "note": "The open dataset does not state how this figure is aggregated. Lead and Copper Rule compliance is normally assessed on a 90th-percentile tap sample, but this dataset does not say that this value is that statistic, nor which monitoring period it covers. Do not describe it as a 90th percentile, a mean, or a current result unless you have confirmed that with the water system itself."
+        "note": "The open dataset does not state how this figure is aggregated or which monitoring period it covers. Do not describe it as a 90th percentile, a mean, or a current result.",
+        "evidence": "Measured 2026-08-30: the companion CCR records carry a SEPARATE lead_90th_percentile field, and it disagrees with this one. Across 14 systems that publish both, only 1 matched under either unit reading. So this value is demonstrably not simply the CCR 90th percentile.",
+        "why_we_do_not_use_the_other_field": "lead_90th_percentile is internally inconsistent in units across records (neighbouring systems report 0.002, 1.2 and 7 for the same quantity), so it is not read by this project at all."
       }
     },
     "copper_action_level_exceedance": {

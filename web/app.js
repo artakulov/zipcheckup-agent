@@ -1,7 +1,8 @@
 import { registerAll, revokeAll, refreshStatus, onStatus } from './lib/webmcp.js';
 import { ALL_TOOLS } from './tools/index.js';
 import { logActivity } from './lib/store.js';
-import { renderShortlist, renderActivity, wireHumanControls, escapeHtml, renderResult } from './lib/ui.js';
+import { renderShortlist, renderActivity, wireHumanControls, escapeHtml, renderResult, renderLetter } from './lib/ui.js';
+import { exportLetter, exportShortlist, mailtoLetter } from './lib/export.js';
 
 const $ = (id) => document.getElementById(id);
 const byName = new Map(ALL_TOOLS.map((t) => [t.name, t]));
@@ -180,6 +181,16 @@ $('reregister').addEventListener('click', async () => {
 
 wireHumanControls();
 renderShortlist();
+renderLetter(null);
+
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'dl-letter') exportLetter();
+  if (e.target.id === 'dl-shortlist') exportShortlist();
+  if (e.target.id === 'mail-letter') {
+    const href = mailtoLetter();
+    if (href) e.target.setAttribute('href', href);
+  }
+});
 
 registerAll(ALL_TOOLS).catch(async (e) => {
   await refreshStatus();

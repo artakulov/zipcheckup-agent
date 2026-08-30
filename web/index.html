@@ -41,6 +41,7 @@
       <form id="add-form" class="row">
         <input id="add-zip" type="text" inputmode="numeric" pattern="\d{5}" placeholder="Add a ZIP" aria-label="Add a ZIP code">
         <button class="btn btn-quiet" type="submit">Add</button>
+        <button class="btn btn-quiet" id="dl-shortlist" type="button">Export</button>
       </form>
     </section>
 
@@ -72,6 +73,14 @@
       <summary>Raw payload the agent receives</summary>
       <pre id="out" class="out">Run a tool to see the payload an agent receives.</pre>
     </details>
+  </section>
+
+  <section class="panel">
+    <h2>Letter draft</h2>
+    <p class="muted small">
+      Built only from values the source actually has. Anything unknown becomes a question, never an allegation.
+    </p>
+    <div id="letter"><p class="empty muted small">No draft yet.</p></div>
   </section>
 
   <section class="panel">

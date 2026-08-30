@@ -156,3 +156,42 @@ export function renderResult(result) {
     ${result.row_state ? `<p class="not-claim">${escapeHtml(result.row_state.note)}</p>` : ''}
     <div class="grid">${Object.entries(result.metrics).map(([f, m]) => metricCell(f, m)).join('')}</div>`;
 }
+
+// --- letter panel ---------------------------------------------------------
+
+export function renderLetter(letter) {
+  const el = document.getElementById('letter');
+  if (!el) return;
+  if (!letter) {
+    el.innerHTML = '<p class="empty muted small">No draft yet. Ask an agent to write to the water system about a ZIP, or run the tool from the console.</p>';
+    return;
+  }
+  const r = letter.recipient ?? {};
+  const resolved = r.resolution === 'utility_contact';
+  el.innerHTML = `
+    <div class="letter-to ${resolved ? '' : 'letter-to-unresolved'}">
+      <div class="cell-label">${resolved ? 'Recipient, from the dataset' : 'Recipient not resolved'}</div>
+      ${
+        resolved
+          ? `<div class="cell-value">${escapeHtml(r.name ?? '')}</div>
+             <div class="cell-note">${escapeHtml([r.email, r.phone, r.website, r.mailing_address].filter(Boolean).join(' · '))}
+             ${r.fields_not_published?.length ? `<br>Not published: ${escapeHtml(r.fields_not_published.join(', '))}` : ''}</div>`
+          : `<div class="cell-value">verify before sending</div>
+             <div class="cell-note">${escapeHtml(r.unknown_reason ?? '')}. This is not a claim that ${escapeHtml(r.not_a_claim_of ?? '')}.</div>`
+      }
+    </div>
+    <div class="letter-subject">${escapeHtml(letter.subject)}</div>
+    <pre class="letter-body">${escapeHtml(letter.body_markdown)}</pre>
+    <div class="letter-counts muted small">
+      ${letter.facts_cited.length} fact${letter.facts_cited.length === 1 ? '' : 's'} asserted, all from known values ·
+      ${letter.facts_omitted.length} unknown${letter.facts_omitted.length === 1 ? '' : 's'} turned into questions instead of claims
+    </div>
+    <div class="row">
+      <button class="btn btn-quiet" id="dl-letter" type="button">Download letter</button>
+      <a class="btn btn-quiet" id="mail-letter" href="#">Open in mail</a>
+    </div>`;
+}
+
+window.addEventListener('zipcheckup:statechange', (e) => {
+  if (e.detail?.action?.type === 'letter') renderLetter(e.detail.state.letter);
+});

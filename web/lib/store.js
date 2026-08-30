@@ -10,6 +10,7 @@ export const SHORTLIST_LIMIT = 12;
 const state = {
   shortlist: [],
   activity: [],
+  letter: null,
 };
 
 load();
@@ -39,7 +40,7 @@ function commit(action) {
 }
 
 export function snapshot() {
-  return { shortlist: state.shortlist.map((e) => ({ ...e })), activity: state.activity.slice(0, 50) };
+  return { shortlist: state.shortlist.map((e) => ({ ...e })), activity: state.activity.slice(0, 50), letter: state.letter };
 }
 
 export function getShortlist() {
@@ -85,6 +86,16 @@ export function clearShortlist(addedBy) {
   state.shortlist = [];
   commit({ type: 'clear', added_by: addedBy });
   return { changed: removed > 0, removed };
+}
+
+export function setLetter(letter) {
+  state.letter = letter;
+  commit({ type: 'letter', zip: letter?.zip ?? null });
+  return letter;
+}
+
+export function getLetter() {
+  return state.letter;
 }
 
 export function logActivity(entry) {

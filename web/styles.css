@@ -151,3 +151,16 @@ a { color: inherit; }
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* --- letter --- */
+.letter-to { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; margin-bottom: 10px; background: var(--bg); }
+.letter-to-unresolved { border-style: dashed; border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); background: transparent; }
+.letter-to-unresolved .cell-value { color: var(--warn); font-size: 14px; }
+.letter-subject { font: 600 14px var(--mono); margin: 10px 0 6px; }
+.letter-body {
+  font: 12.5px/1.6 var(--mono); white-space: pre-wrap; word-break: break-word;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 9px;
+  padding: 14px; max-height: 340px; overflow: auto; margin: 0 0 8px;
+}
+.letter-counts { margin-bottom: 10px; }
+a.btn { text-decoration: none; display: inline-block; }

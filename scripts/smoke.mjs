@@ -171,6 +171,51 @@ try {
     'the tool returned the resulting shortlist so the agent knows the visible state',
   );
 
+  // The letter must be incapable of asserting something the data does not say.
+  for (const [zip, label] of [['48201', 'well-populated ZIP'], ['01004', 'almost no data']]) {
+    const letter = await page.evaluate(async (z) => {
+      const mod = await import('./tools/index.js');
+      return mod.draftCivicLetter.execute({ zip: z, concern: 'lead in the water at a house we are buying' });
+    }, zip);
+
+    ok(letter.ok === true, `${zip} (${label}): draft_civic_letter returned ok`);
+    const body = letter.body_markdown.toLowerCase();
+    ok(!body.includes('unknown'), `${zip}: the word "unknown" never appears in the letter body`);
+    ok(!body.includes('null') && !body.includes('undefined'), `${zip}: no null or undefined leaked into the prose`);
+    ok(
+      letter.facts_cited.every((f) => f.status === 'known'),
+      `${zip}: every asserted fact has status known (${letter.facts_cited.length} cited)`,
+    );
+    ok(
+      letter.facts_omitted.every((f) => f.converted_to_question && f.why_omitted),
+      `${zip}: every omitted fact became a question (${letter.facts_omitted.length} omitted)`,
+    );
+    ok(letter.verification_checklist.length > 0, `${zip}: the draft carries a pre-send verification checklist`);
+    ok(
+      ['utility_contact', 'unresolved'].includes(letter.recipient.resolution),
+      `${zip}: recipient resolution is ${letter.recipient.resolution}`,
+    );
+    if (letter.recipient.resolution === 'unresolved') {
+      ok(
+        Boolean(letter.recipient.unknown_reason && letter.recipient.not_a_claim_of),
+        `${zip}: an unresolved recipient says why, and what that does not mean`,
+      );
+    }
+    const rendered = await page.textContent('#letter');
+    ok((rendered ?? '').includes(letter.subject), `${zip}: the draft is rendered on the page for the person to read`);
+  }
+
+  // A ZIP with nothing known must produce a request for records, not an allegation.
+  const thin = await page.evaluate(async () => {
+    const mod = await import('./tools/index.js');
+    return mod.draftCivicLetter.execute({ zip: '00601' });
+  });
+  ok(thin.facts_cited.length === 0, '00601: nothing is asserted, because nothing is known');
+  ok(
+    thin.body_markdown.includes('publishes no measured values'),
+    '00601: the letter says it is asking rather than asserting',
+  );
+
   // Revocation via AbortSignal, since unregisterTool was removed from the spec.
   await page.click('#revoke');
   await page.waitForTimeout(300);
