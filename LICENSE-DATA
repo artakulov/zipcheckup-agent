@@ -1,0 +1,19 @@
+DATA LICENSE
+
+The dataset shipped under web/data/ is derived from ZipCheckup Open Data,
+published in the AWS Registry of Open Data:
+
+  https://registry.opendata.aws/zipcheckup-us-home-environmental-risk/
+  s3://zipcheckup-open-data (us-west-2, anonymous read)
+
+Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0):
+  https://creativecommons.org/licenses/by/4.0/
+
+Attribution: ZipCheckup Open Data.
+Snapshot used by this build: 2026-08-19. See web/data/BUILD.json for the exact
+source URL, ETag and per-column coverage of the snapshot this repository ships.
+
+Upstream sources feeding that dataset include EPA SDWIS, utility Consumer
+Confidence Reports, EPA radon zones, EPA UCMR5, FEMA and USGS.
+
+The source code in this repository is separately licensed under MIT; see LICENSE.

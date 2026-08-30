@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZipCheckup Agent - agent-callable US home environmental risk</title>
+<meta name="description" content="A page that exposes US home environmental risk data as WebMCP tools an AI agent can call directly, with source, measurement date and an explicit unknown for every missing value.">
+<!-- ORIGIN-TRIAL-TOKEN-SLOT: replaced once the Chrome WebMCP origin trial token is issued for this domain -->
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <strong>ZipCheckup Agent</strong>
+    <span class="sub">US home environmental risk, callable by an agent</span>
+  </div>
+  <button id="badge" class="badge badge-wait" type="button" aria-live="polite">checking WebMCP…</button>
+</header>
+
+<main>
+  <section class="panel" id="intro">
+    <h1>This page is a tool, not just a document.</h1>
+    <p>
+      It registers WebMCP tools with your browser, so an AI agent can query US environmental-risk
+      data by calling functions on this page instead of scraping it. Every value it returns carries
+      its source, its measurement date and the legal threshold it is judged against. Values that are
+      missing from the source come back as an explicit <code>unknown</code> with a reason attached -
+      never as a reassuring zero.
+    </p>
+    <p class="muted" id="howto"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Registered tools <span class="muted" id="toolcount"></span></h2>
+    <p class="muted small">Read back from <code>document.modelContext.getTools()</code>, not from our own list.</p>
+    <ul id="toollist" class="toollist"></ul>
+    <button id="revoke" class="btn btn-quiet" type="button">Revoke all tools</button>
+    <button id="reregister" class="btn btn-quiet" type="button">Re-register</button>
+  </section>
+
+  <section class="panel">
+    <h2>Agent console</h2>
+    <p class="muted small">
+      For judging without an agent attached: call any registered tool by hand and inspect the exact payload.
+    </p>
+    <div class="row">
+      <select id="toolpick" aria-label="Tool"></select>
+      <input id="arg" type="text" value="48201" aria-label="ZIP code" placeholder="ZIP, e.g. 48201">
+      <button id="run" class="btn" type="button">Run</button>
+    </div>
+    <div class="row small muted">
+      Try <button class="chip" data-zip="48201">48201</button>
+      <button class="chip" data-zip="90210">90210</button>
+      <button class="chip" data-zip="01004">01004 (partial data)</button>
+      <button class="chip" data-zip="00601">00601 (ZIP only)</button>
+      <button class="chip" data-zip="99999">99999 (absent)</button>
+    </div>
+    <pre id="out" class="out">Run a tool to see the payload an agent receives.</pre>
+  </section>
+
+  <section class="panel">
+    <h2>Activity</h2>
+    <ol id="log" class="log"><li class="muted">No tool calls yet.</li></ol>
+  </section>
+</main>
+
+<footer>
+  Data: <a href="https://registry.opendata.aws/zipcheckup-us-home-environmental-risk/">ZipCheckup Open Data</a>,
+  CC BY 4.0, snapshot 2026-08-19. Code MIT.
+  <a href="https://github.com/artakulov/zipcheckup-agent">Source</a>.
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
