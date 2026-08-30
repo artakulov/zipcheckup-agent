@@ -95,6 +95,55 @@ try {
     }
   }
 
+  // compare_zips: a ZIP with an unknown value must never be ranked.
+  const cmp = await page.evaluate(async () => {
+    const mod = await import('./tools/index.js');
+    return mod.compareZips.execute({ zips: ['90210', '48201', '01004'] });
+  });
+  ok(cmp.ok === true, 'compare_zips returned ok');
+  const lead = cmp.comparison.lead_level_mg_l;
+  ok(!lead.comparable.includes('01004'), '01004 (lead unknown) is not in the ranked set');
+  ok(lead.excluded_unknown.includes('01004'), '01004 is listed in excluded_unknown');
+  ok(lead.best !== '01004' && lead.worst !== '01004', 'an unknown ZIP is never named best or worst');
+  ok(Boolean(lead.caveat), 'a partial ranking carries a caveat naming the exclusion');
+  const bwa = cmp.comparison.boil_water_advisories;
+  ok(bwa.ranking === null && bwa.comparable.length === 0, 'the all-empty column produces no ranking at all');
+  ok(cmp.comparison.radon_zone?.direction === 'higher_is_better', 'radon_zone ranks higher-is-better (zone 1 is worst)');
+
+  // explain_metric: coverage must be generated, not hand-typed.
+  const [expl, buildJson] = await Promise.all([
+    page.evaluate(async () => {
+      const mod = await import('./tools/index.js');
+      return mod.explainMetric.execute({ metric: 'home_safety_score', zip: '01004' });
+    }),
+    page.evaluate(async () => (await fetch('./data/BUILD.json')).json()),
+  ]);
+  ok(
+    expl.coverage_in_dataset.rows_with_value === buildJson.coverage.home_safety_score.rows_with_value,
+    `explain_metric coverage comes from BUILD.json (${expl.coverage_in_dataset.rows_with_value} rows)`,
+  );
+  ok(expl.threshold?.status === 'not_applicable', 'the vendor composite ships with no statutory threshold');
+  ok(expl.value_for_zip?.status === 'unknown', '01004 has no score, returned as unknown rather than 0');
+
+  const leadExpl = await page.evaluate(async () => {
+    const mod = await import('./tools/index.js');
+    return mod.explainMetric.execute({ metric: 'lead_level_mg_l' });
+  });
+  ok(leadExpl.threshold?.value === 0.015 && Boolean(leadExpl.threshold.verified_by), 'the lead threshold carries a value and a source');
+
+  // find_safer_zips: the exclusion count is the honest headline.
+  const search = await page.evaluate(async () => {
+    const mod = await import('./tools/index.js');
+    return mod.findSaferZips.execute({ state: 'MI', min_safety_score: 80, limit: 5 });
+  });
+  ok(search.ok === true, 'find_safer_zips returned ok');
+  ok(search.excluded.unknown_on_a_filtered_metric > 0, `${search.excluded.unknown_on_a_filtered_metric} ZIPs excluded for missing data, reported explicitly`);
+  ok(
+    search.matches.every((m) => m.metrics.home_safety_score?.status === 'known'),
+    'every match has a KNOWN value on the filtered metric',
+  );
+  ok(Boolean(search.warning), 'the result warns that exclusion is a data gap, not a safety finding');
+
   // The shared-state claim: a tool call must change what the person sees.
   await page.evaluate(async () => {
     const mod = await import('./tools/index.js');

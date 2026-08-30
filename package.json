@@ -16,7 +16,8 @@
     "test": "node --test test/",
     "smoke": "node scripts/smoke.mjs",
     "deploy": "npx --yes wrangler pages deploy web --project-name=zipcheckup-agent",
-    "bridge": "node scripts/mcp-bridge.mjs"
+    "bridge": "node scripts/mcp-bridge.mjs",
+    "build:docs": "node scripts/build-docs.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

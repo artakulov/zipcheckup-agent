@@ -1,7 +1,7 @@
 import { registerAll, revokeAll, refreshStatus, onStatus } from './lib/webmcp.js';
 import { ALL_TOOLS } from './tools/index.js';
 import { logActivity } from './lib/store.js';
-import { renderShortlist, renderActivity, wireHumanControls, escapeHtml } from './lib/ui.js';
+import { renderShortlist, renderActivity, wireHumanControls, escapeHtml, renderResult } from './lib/ui.js';
 
 const $ = (id) => document.getElementById(id);
 const byName = new Map(ALL_TOOLS.map((t) => [t.name, t]));
@@ -39,7 +39,12 @@ function renderStatus(status) {
 
   const pick = $('toolpick');
   const previous = pick.value;
-  pick.innerHTML = status.tools.map((t) => `<option value="${t.name}">${t.name}</option>`).join('');
+  // getTools() returns tools alphabetically, which would land the console on
+  // compare_zips. Put the primary lookup first instead.
+  const ordered = [...status.tools].sort(
+    (a, b) => Number(b.name === 'zipcheckup_lookup_zip') - Number(a.name === 'zipcheckup_lookup_zip'),
+  );
+  pick.innerHTML = ordered.map((t) => `<option value="${t.name}">${t.name}</option>`).join('');
   if (previous && status.tools.some((t) => t.name === previous)) pick.value = previous;
   renderArgs();
 
@@ -110,6 +115,7 @@ async function run() {
     const result = await tool.execute(args);
     const ms = Math.round(performance.now() - t0);
     $('out').textContent = JSON.stringify(result, null, 2);
+    renderResult(result);
     const summary = result.data_quality
       ? `${result.data_quality.known} known / ${result.data_quality.unknown} unknown`
       : result.error?.code ?? (result.action_applied ? `${result.action_applied} → ${result.count} on shortlist` : 'ok');

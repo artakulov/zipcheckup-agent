@@ -74,3 +74,85 @@ export function wireHumanControls() {
 window.addEventListener('zipcheckup:statechange', (e) => {
   renderShortlist(e.detail?.action?.zip ?? null);
 });
+
+// --- rendered result view -------------------------------------------------
+// The JSON is the contract, but a person needs to SEE that unknown and zero are
+// different things. This renders known values plainly and unknown ones as an
+// explicit, differently-coloured statement of what is not known and why.
+
+const LABELS = {
+  total_violations: 'Violations',
+  health_violations: 'Health-based violations',
+  unresolved_violations: 'Unresolved',
+  lead_level_mg_l: 'Lead',
+  copper_action_level_exceedance: 'Copper exceedance',
+  radon_zone: 'Radon zone',
+  home_safety_score: 'Safety score',
+  home_safety_grade: 'Grade',
+  contaminant_count: 'Contaminants',
+  health_contaminant_names: 'Named contaminants',
+  enforcement_action_count: 'Enforcement actions',
+  enforcement_health_violations: 'Enforcement on health',
+  has_active_issues: 'Active issues',
+  boil_water_advisories: 'Boil-water advisories',
+};
+
+function fmt(m) {
+  if (Array.isArray(m.value)) return m.value.join(', ');
+  if (typeof m.value === 'boolean') return m.value ? 'yes' : 'no';
+  if (m.unit && /mg\/L/.test(m.unit)) return `${m.value} ${m.unit}`;
+  return String(m.value);
+}
+
+function metricCell(field, m) {
+  if (!m) return '';
+  const label = LABELS[field] ?? field;
+  if (m.status === 'unknown') {
+    return `<div class="cell cell-unknown" title="${escapeHtml(m.unknown_reason ?? '')}">
+      <div class="cell-label">${escapeHtml(label)}</div>
+      <div class="cell-value">unknown</div>
+      <div class="cell-note">${escapeHtml(m.unknown_reason ?? '')}</div>
+    </div>`;
+  }
+  const over = m.threshold?.comparison === 'above';
+  return `<div class="cell ${over ? 'cell-over' : ''}">
+    <div class="cell-label">${escapeHtml(label)}</div>
+    <div class="cell-value">${escapeHtml(fmt(m))}${m.qualifier ? ' <span class="qual">?</span>' : ''}</div>
+    <div class="cell-note">${escapeHtml(
+      m.qualifier
+        ? m.qualifier.replace(/_/g, ' ')
+        : m.threshold?.value !== undefined
+          ? `${over ? 'above' : 'at or below'} ${m.threshold.name} (${m.threshold.value} ${m.threshold.unit})`
+          : '',
+    )}</div>
+  </div>`;
+}
+
+export function renderResult(result) {
+  const el = document.getElementById('result');
+  if (!el) return;
+
+  if (!result?.ok) {
+    el.innerHTML = `<div class="result-head"><strong>${escapeHtml(result?.error?.code ?? 'error')}</strong></div>
+      <p class="muted small">${escapeHtml(result?.error?.message ?? '')}</p>
+      ${result?.error?.not_a_claim_of ? `<p class="not-claim">This is <em>not</em> a claim of: ${escapeHtml(result.error.not_a_claim_of)}</p>` : ''}`;
+    return;
+  }
+
+  if (!result.metrics) {
+    el.innerHTML = `<div class="result-head"><strong>${escapeHtml(result.tool ?? 'result')}</strong>
+      <span class="muted small">see the JSON below for the full payload</span></div>`;
+    return;
+  }
+
+  const dq = result.data_quality;
+  el.innerHTML = `
+    <div class="result-head">
+      <strong>${escapeHtml(result.place?.zip ?? '')}</strong>
+      <span class="muted">${escapeHtml([result.place?.city, result.place?.state].filter(Boolean).join(', ') || 'no place name in the dataset')}</span>
+      <span class="coverage">${dq.known} of ${dq.known + dq.unknown} metrics known</span>
+    </div>
+    ${result.water_system?.system_name ? `<p class="muted small">Water system: ${escapeHtml(result.water_system.system_name)} (${escapeHtml(result.water_system.pwsid ?? '')}). A ZIP is not a service area - verify the provider for a specific address.</p>` : ''}
+    ${result.row_state ? `<p class="not-claim">${escapeHtml(result.row_state.note)}</p>` : ''}
+    <div class="grid">${Object.entries(result.metrics).map(([f, m]) => metricCell(f, m)).join('')}</div>`;
+}
