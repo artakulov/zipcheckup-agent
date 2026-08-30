@@ -22,7 +22,7 @@ export async function resolveRecipient({ pwsid, systemName, state }) {
       resolution: 'unresolved',
       status: 'unknown',
       unknown_reason: 'no PWSID is recorded for this ZIP, so no water system can be looked up',
-      not_a_claim_of: 'that no water system serves this ZIP',
+      not_a_claim_of: 'no water system serving this ZIP',
       how_to_resolve: `Ask the drinking-water primacy agency for ${state ?? 'your state'} which system serves the address.`,
       references: EPA_PRIMACY,
     };
@@ -64,7 +64,7 @@ export async function resolveRecipient({ pwsid, systemName, state }) {
     unknown_reason: ccr
       ? `the published record for ${pwsid} carries no website, phone, email or address`
       : `no consumer-confidence record is published at data/ccr/parsed-json/${pwsid}.json`,
-    not_a_claim_of: 'that this utility has no contact details, only that this dataset publishes none',
+    not_a_claim_of: 'this utility having no contact details; only that this dataset publishes none',
     how_to_resolve: `Search for the drinking-water primacy agency for ${state ?? 'the relevant state'}, or use the EPA contact route below. Do not send this letter to an address that has not been verified.`,
     references: EPA_PRIMACY,
   };

@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-// Record the demo screen capture.
+// Record the demo screen capture, cut to the narration.
 //
-// Driven by a script rather than a human hand so any take can be reproduced
-// exactly, and so the footage can be re-cut to fit a finished voice track
-// without re-shooting. Runs against native WebMCP in Chrome, so the badge in
-// frame says "native" rather than "polyfill".
+// The beats are absolute timestamps taken from the finished voice track, not
+// arbitrary pauses: each paragraph of the middle narration gets a share of the
+// 130.4s audio proportional to its word count, and the picture is scheduled to
+// match. Driven by a script so a re-take reproduces exactly, and so a change to
+// the narration can be re-synced without re-shooting anything by hand.
 //
 //   node scripts/record-demo.mjs [url]
 //
-// Output: tmp/demo/*.webm  ->  convert and trim with ffmpeg.
+// Output: tmp/demo/*.webm, consumed by scripts/assemble-video.mjs.
 
 import { chromium } from 'playwright';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,27 +22,32 @@ const URL_ARG = process.argv[2] || 'https://artakulov.github.io/zipcheckup-agent
 
 mkdirSync(OUT, { recursive: true });
 
-// Record generously: the footage is cut to fit a finished voice track, so it is
-// far cheaper to have too much than to re-shoot short.
-const BEAT_SCALE = Number(process.env.BEAT_SCALE ?? 3);
-
-const beat = async (page, label, ms) => {
-  process.stderr.write(`  ${label}\n`);
-  await page.waitForTimeout(Math.round(ms * BEAT_SCALE));
+// Absolute cue points in the middle narration, in seconds, derived from word
+// counts per paragraph against the measured 130.36s render.
+const CUES = {
+  problem: 0,
+  emptyCell: 23.4,
+  sixTools: 39.2,
+  missingData: 54.6,
+  sharedState: 75.8,
+  letter: 97.0,
+  oneMoreThing: 116.1,
+  end: 130.4,
 };
 
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-features=WebMCP', '--hide-scrollbars'] });
 const context = await browser.newContext({
-  viewport: { width: 1120, height: 820 },
-  deviceScaleFactor: 2,
-  recordVideo: { dir: OUT, size: { width: 1120, height: 820 } },
+  viewport: { width: 1920, height: 1080 },
+  deviceScaleFactor: 1,
+  recordVideo: { dir: OUT, size: { width: 1920, height: 1080 } },
   colorScheme: 'dark',
 });
+// Video capture begins when the context is created, so everything before the
+// first cue - navigation, reload, style injection - is footage the assembler
+// must skip. Record the offset rather than guessing it.
+const recordStart = Date.now();
 const page = await context.newPage();
 
-// Agent calls go through the tool objects directly, which is exactly what the
-// browser does when an agent invokes them, so the activity log attributes them
-// to the agent and the UI reacts the same way.
 const agent = (fn, args) =>
   page.evaluate(
     async ({ fn, args }) => {
@@ -55,51 +61,78 @@ await page.goto(URL_ARG, { waitUntil: 'networkidle' });
 await page.waitForFunction(async () => (await document.modelContext?.getTools?.())?.length === 6, null, { timeout: 20000 });
 await agent('updateShortlist', { action: 'clear' });
 await page.reload({ waitUntil: 'networkidle' });
-await page.waitForTimeout(1200);
 
-process.stderr.write('recording beats:\n');
+// Applied AFTER the reload: a reload drops injected styles, which silently cost
+// one take. The content column is 860px and would otherwise sit inside empty
+// bands in a 1920 frame.
+await page.addStyleTag({ content: 'html { zoom: 1.42; }' });
+await page.waitForTimeout(1500);
 
-await beat(page, 'hero and badge', 3500);
+const t0 = Date.now();
+const at = async (cue) => {
+  const wait = CUES[cue] * 1000 - (Date.now() - t0);
+  if (wait > 0) await page.waitForTimeout(wait);
+  process.stderr.write(`  ${((Date.now() - t0) / 1000).toFixed(1)}s  ${cue}\n`);
+};
 
-await page.getByRole('button', { name: /WebMCP/ }).scrollIntoViewIfNeeded();
-await beat(page, 'registered tools', 3000);
-await page.locator('#toollist').scrollIntoViewIfNeeded();
-await beat(page, 'tool list read back from getTools()', 3500);
+process.stderr.write('recording, cued to the narration:\n');
 
-// A well-covered ZIP first, so the contrast lands.
+// "Here's the problem... over a thousand ZIP codes listed with every field blank."
+await at('problem');
+
+// "An assistant reading a web page sees an empty table cell."
+await at('emptyCell');
 await page.locator('#toolpick').scrollIntoViewIfNeeded();
 await page.fill('[data-arg="zip"]', '90210');
 await page.click('#run');
-await beat(page, '90210: 11 of 14 known', 4500);
 
-// Then the one that makes the point.
+// "WebMCP changes what gets exchanged. The page registers six tools."
+await at('sixTools');
+await page.locator('#toollist').scrollIntoViewIfNeeded();
+
+// "Watch what happens when data is missing. This ZIP has one known metric out of fourteen."
+await at('missingData');
+await page.locator('#toolpick').scrollIntoViewIfNeeded();
 await page.fill('[data-arg="zip"]', '01004');
 await page.click('#run');
-await beat(page, '01004: 1 of 14 known, thirteen explicit unknowns', 6000);
 
-// Shared state: the agent writes, the human watches.
+// "The shortlist is shared state... the row appears while I watch."
+await at('sharedState');
 await page.locator('#shortlist').scrollIntoViewIfNeeded();
-await beat(page, 'shortlist empty', 1500);
+await page.waitForTimeout(3000);
 await agent('updateShortlist', { action: 'add', zip: '48201', note: 'closest to the new office' });
-await beat(page, 'agent adds 48201', 3000);
+await page.waitForTimeout(6000);
 await agent('updateShortlist', { action: 'add', zip: '01002', note: 'second option' });
-await beat(page, 'agent adds 01002', 3000);
-
-// Search: the exclusion count is the honest headline.
-await page.selectOption('#toolpick', 'zipcheckup_find_safer_zips');
-await page.waitForTimeout(400);
-await page.fill('[data-arg="state"]', 'MI');
-await page.fill('[data-arg="max_lead_mg_l"]', '0.005');
-await page.click('#run');
-await beat(page, 'find_safer_zips over Michigan', 5000);
-
-// The letter.
-await agent('draftCivicLetter', { zip: '48201', concern: 'lead in the water at a house we are buying' });
-await page.locator('#letter').scrollIntoViewIfNeeded();
-await beat(page, 'letter: facts asserted vs questions asked', 6500);
-
+await page.waitForTimeout(5000);
 await page.locator('#log').scrollIntoViewIfNeeded();
-await beat(page, 'activity log, every call attributed', 4000);
+
+// "Finally, the agent drafts a letter to the water system."
+await at('letter');
+await agent('draftCivicLetter', { zip: '48201', concern: 'lead in the water at a house we are buying' });
+await page.waitForTimeout(1200);
+await page.locator('#letter').scrollIntoViewIfNeeded();
+
+// "An agent found a mistake we hadn't: our lead figure is not the ninety
+//  percentile sample it looks like."
+await at('oneMoreThing');
+await page.locator('#toolpick').scrollIntoViewIfNeeded();
+await page.selectOption('#toolpick', 'zipcheckup_explain_metric');
+await page.waitForTimeout(600);
+await page.fill('[data-arg="metric"]', 'lead_level_mg_l');
+await page.click('#run');
+await page.waitForTimeout(2000);
+await page.locator('.jsonwrap summary').click();
+
+// Tail, so the assembler always has picture to spare.
+await at('end');
+await page.waitForTimeout(8000);
+
+writeFileSync(join(OUT, 'cues.json'), JSON.stringify({
+  offset_seconds: Number(((t0 - recordStart) / 1000).toFixed(2)),
+  cues: CUES,
+  recorded_at: new Date().toISOString(),
+  url: URL_ARG,
+}, null, 2));
 
 await context.close();
 await browser.close();
