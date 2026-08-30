@@ -33,7 +33,9 @@
         "verified_by": "https://www.epa.gov/dwreginfo/lead-and-copper-rule"
       },
       "what_missing_means": "The source records only positive exceedances. A blank therefore distinguishes neither 'no exceedance' nor 'never tested', and must not be rendered as false.",
-      "caveats": ["Only 3.1% of rows carry a value, and the only value ever present is true."]
+      "caveats": [
+        "Only 3.1% of rows carry a value, and the only value ever present is true."
+      ]
     },
     "radon_zone": {
       "label": "EPA radon zone",
@@ -60,7 +62,10 @@
       "upstream": "EPA SDWIS",
       "threshold": null,
       "what_missing_means": "No violation record was matched to this ZIP. That is a gap in matching or reporting, not a finding of compliance.",
-      "caveats": ["Includes monitoring and reporting violations, which are procedural, alongside health-based ones. Use health_violations for the health-relevant subset."]
+      "caveats": [
+        "Includes monitoring and reporting violations, which are procedural, alongside health-based ones. Use health_violations for the health-relevant subset.",
+        "Counts records matched to this ZIP, not events. A zero can equally mean nothing happened, nothing was reported, or nothing was matched."
+      ]
     },
     "health_violations": {
       "label": "Health-based violations",
@@ -69,7 +74,9 @@
       "upstream": "EPA SDWIS",
       "threshold": null,
       "what_missing_means": "No health-based violation record was matched to this ZIP. Not a finding that the water met every standard.",
-      "caveats": []
+      "caveats": [
+        "A ZIP is not a water system. The dataset maps each ZIP to one public water system, but ZIP and service-area boundaries do not nest. For example the dataset assigns 90210 to the Los Angeles Department of Water and Power, while the City of Beverly Hills operates its own system for much of that area. Verify the provider for a specific address before acting."
+      ]
     },
     "unresolved_violations": {
       "label": "Unresolved violations",
@@ -87,7 +94,9 @@
       "upstream": "EPA SDWIS",
       "threshold": null,
       "what_missing_means": "No enforcement record was matched to this ZIP.",
-      "caveats": ["An enforcement action means a regulator responded. Its absence does not mean nothing happened."]
+      "caveats": [
+        "An enforcement action means a regulator responded. Its absence does not mean nothing happened."
+      ]
     },
     "enforcement_health_violations": {
       "label": "Enforcement actions on health violations",
@@ -114,7 +123,9 @@
       "upstream": "EPA SDWIS",
       "threshold": null,
       "what_missing_means": "No contaminant records were matched to this ZIP.",
-      "caveats": ["Counts contaminants that appear in violation records, not everything present in the water."]
+      "caveats": [
+        "Counts contaminants that appear in violation records, not everything present in the water."
+      ]
     },
     "health_contaminant_names": {
       "label": "Health-relevant contaminants",
@@ -123,7 +134,9 @@
       "upstream": "EPA SDWIS",
       "threshold": null,
       "what_missing_means": "No named health contaminant was matched to this ZIP.",
-      "caveats": ["Free text from the upstream record; wording varies between states."]
+      "caveats": [
+        "Free text from the upstream record; wording varies between states."
+      ]
     },
     "home_safety_score": {
       "label": "Home safety score",
@@ -135,16 +148,23 @@
         "reason": "A vendor composite with no statutory threshold. It is not an EPA metric and no regulation defines a passing value."
       },
       "what_missing_means": "No score was computed for this ZIP. It is not a score of 0 and not a grade of F.",
-      "caveats": ["The inputs and weights behind the composite are not documented in the open dataset, so the score should not be treated as a measurement."]
+      "caveats": [
+        "The inputs and weights behind the composite are not documented in the open dataset, so the score should not be treated as a measurement."
+      ]
     },
     "home_safety_grade": {
       "label": "Home safety grade",
       "definition": "Letter grade A-F corresponding to the composite score.",
       "unit": "grade A-F",
       "upstream": "ZipCheckup composite",
-      "threshold": { "status": "not_applicable", "reason": "Derived from the composite score; no statutory basis." },
+      "threshold": {
+        "status": "not_applicable",
+        "reason": "Derived from the composite score; no statutory basis."
+      },
       "what_missing_means": "No grade was computed for this ZIP.",
-      "caveats": ["Present exactly when home_safety_score is present."]
+      "caveats": [
+        "Present exactly when home_safety_score is present."
+      ]
     },
     "boil_water_advisories": {
       "label": "Boil-water advisories",
@@ -153,7 +173,9 @@
       "upstream": "declared in the source schema",
       "threshold": null,
       "what_missing_means": "This column exists in the source schema but is empty for every row of the snapshot, so the dataset carries no advisory information at all.",
-      "caveats": ["Shipped deliberately as a permanent unknown: telling an agent the field exists and is empty is safer than omitting it and letting the agent assume none were issued."]
+      "caveats": [
+        "Shipped deliberately as a permanent unknown: telling an agent the field exists and is empty is safer than omitting it and letting the agent assume none were issued."
+      ]
     }
   }
 }
