@@ -3,7 +3,7 @@
   "metrics": {
     "lead_level_mg_l": {
       "label": "Lead level",
-      "definition": "Lead concentration reported for the drinking-water system serving this ZIP code, as published in the source dataset.",
+      "definition": "Lead concentration reported for the drinking-water system mapped to this ZIP code, as published in the source dataset.",
       "unit": "mg/L",
       "upstream": "EPA SDWIS and utility Consumer Confidence Reports",
       "threshold": {
@@ -17,8 +17,13 @@
       "what_missing_means": "No lead figure is published for this ZIP in the snapshot. It is not a result of zero and not evidence that the water was tested.",
       "caveats": [
         "A reported value of exactly 0 appears for thousands of ZIP codes. A laboratory cannot report a true zero; treat 0 as 'below the detection limit', not as 'no lead present'.",
-        "This is a system-level figure. Lead most often enters water from the service line and household plumbing, so an individual home can differ sharply from its system."
-      ]
+        "This is a system-level figure. Lead most often enters water from the service line and household plumbing, so an individual home can differ sharply from its system.",
+        "The aggregation method and monitoring period behind this number are not documented in the open dataset. Only the snapshot publication date is known, which is not a sampling date."
+      ],
+      "aggregation": {
+        "status": "not_documented",
+        "note": "The open dataset does not state how this figure is aggregated. Lead and Copper Rule compliance is normally assessed on a 90th-percentile tap sample, but this dataset does not say that this value is that statistic, nor which monitoring period it covers. Do not describe it as a 90th percentile, a mean, or a current result unless you have confirmed that with the water system itself."
+      }
     },
     "copper_action_level_exceedance": {
       "label": "Copper action level exceedance",

@@ -80,6 +80,9 @@ export const explainMetric = {
         precision: 'dataset_snapshot_date',
         note: 'The snapshot date is when the file was published, not when any sample was taken.',
       },
+      // If the source does not document how a figure is aggregated, say so
+      // rather than leave a gap a model will fill with a plausible specific.
+      ...(spec.aggregation ? { aggregation: spec.aggregation } : {}),
       threshold: spec.threshold ?? {
         status: 'none',
         reason: 'No statutory threshold applies to this field; it is a count or a descriptor.',
