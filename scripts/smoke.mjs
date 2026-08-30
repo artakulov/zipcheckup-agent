@@ -64,7 +64,8 @@ try {
     ['48201', 'fully populated row'],
     ['01004', 'partial row'],
     ['00601', 'ZIP-only row'],
-    ['99999', 'absent from dataset'],
+    ['99999', 'present but entirely empty row'],
+    ['00000', 'absent from dataset'],
   ];
   for (const [zip, label] of cases) {
     const payload = await page.evaluate(async (z) => {
@@ -93,6 +94,33 @@ try {
       ok(Boolean(payload.error?.not_a_claim_of), `${zip}: absence carries not_a_claim_of`);
     }
   }
+
+  // The shared-state claim: a tool call must change what the person sees.
+  await page.evaluate(async () => {
+    const mod = await import('./tools/index.js');
+    await mod.updateShortlist.execute({ action: 'clear' });
+  });
+  const before = await page.locator('#shortlist li').count();
+  const addResult = await page.evaluate(async () => {
+    const mod = await import('./tools/index.js');
+    return mod.updateShortlist.execute({ action: 'add', zip: '90210', note: 'from smoke test' });
+  });
+  await page.waitForTimeout(200);
+  const row = page.locator('#shortlist li[data-zip="90210"]');
+  ok(addResult.ok === true, 'update_shortlist add returned ok');
+  ok((await row.count()) === 1, `agent write rendered a shortlist row the human can see (was ${before} rows)`);
+  ok(
+    (await row.textContent())?.includes('added by agent'),
+    'the row is attributed to the agent, not the human',
+  );
+  ok(
+    /\d+\/\d+ metrics known/.test((await row.textContent()) ?? ''),
+    'the row states how much of its data is actually known',
+  );
+  ok(
+    addResult.shortlist?.some((e) => e.zip === '90210'),
+    'the tool returned the resulting shortlist so the agent knows the visible state',
+  );
 
   // Revocation via AbortSignal, since unregisterTool was removed from the spec.
   await page.click('#revoke');

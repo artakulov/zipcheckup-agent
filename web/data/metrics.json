@@ -1,0 +1,159 @@
+{
+  "_note": "Authored metric dictionary. Coverage numbers are NOT stored here - they are read at runtime from BUILD.json, which is generated from the source, so what a user sees can never drift from the data. Every threshold carries verified_by; a threshold without a source does not ship.",
+  "metrics": {
+    "lead_level_mg_l": {
+      "label": "Lead level",
+      "definition": "Lead concentration reported for the drinking-water system serving this ZIP code, as published in the source dataset.",
+      "unit": "mg/L",
+      "upstream": "EPA SDWIS and utility Consumer Confidence Reports",
+      "threshold": {
+        "name": "EPA lead action level",
+        "value": 0.015,
+        "unit": "mg/L",
+        "citation": "40 CFR Part 141 Subpart I",
+        "verified_by": "https://www.epa.gov/dwreginfo/lead-and-copper-rule",
+        "note": "15 ppb. Exceeding it in more than 10% of sampled customer taps triggers corrosion-control obligations for the system. The 2024 Lead and Copper Rule Improvements phase in further requirements; confirm the currently applicable value with the system before relying on it."
+      },
+      "what_missing_means": "No lead figure is published for this ZIP in the snapshot. It is not a result of zero and not evidence that the water was tested.",
+      "caveats": [
+        "A reported value of exactly 0 appears for thousands of ZIP codes. A laboratory cannot report a true zero; treat 0 as 'below the detection limit', not as 'no lead present'.",
+        "This is a system-level figure. Lead most often enters water from the service line and household plumbing, so an individual home can differ sharply from its system."
+      ]
+    },
+    "copper_action_level_exceedance": {
+      "label": "Copper action level exceedance",
+      "definition": "Whether the system exceeded the EPA copper action level.",
+      "unit": "boolean",
+      "upstream": "EPA SDWIS",
+      "threshold": {
+        "name": "EPA copper action level",
+        "value": 1.3,
+        "unit": "mg/L",
+        "citation": "40 CFR Part 141 Subpart I",
+        "verified_by": "https://www.epa.gov/dwreginfo/lead-and-copper-rule"
+      },
+      "what_missing_means": "The source records only positive exceedances. A blank therefore distinguishes neither 'no exceedance' nor 'never tested', and must not be rendered as false.",
+      "caveats": ["Only 3.1% of rows carry a value, and the only value ever present is true."]
+    },
+    "radon_zone": {
+      "label": "EPA radon zone",
+      "definition": "EPA Map of Radon Zones classification for the county: 1 is the highest predicted indoor screening level, 3 the lowest.",
+      "unit": "zone 1-3",
+      "upstream": "EPA Map of Radon Zones",
+      "threshold": {
+        "name": "EPA radon action level",
+        "value": 4,
+        "unit": "pCi/L",
+        "citation": "EPA recommended action level for indoor radon",
+        "verified_by": "https://www.epa.gov/radon",
+        "note": "Zone 1 counties have a predicted average indoor screening level above 4 pCi/L."
+      },
+      "what_missing_means": "No zone is published for this ZIP.",
+      "caveats": [
+        "A zone is a county-level prediction, not a measurement of any building. EPA recommends testing every home regardless of zone; a zone 3 home can still measure high."
+      ]
+    },
+    "total_violations": {
+      "label": "Drinking-water violations",
+      "definition": "Count of recorded drinking-water violations for the system serving this ZIP.",
+      "unit": "count",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No violation record was matched to this ZIP. That is a gap in matching or reporting, not a finding of compliance.",
+      "caveats": ["Includes monitoring and reporting violations, which are procedural, alongside health-based ones. Use health_violations for the health-relevant subset."]
+    },
+    "health_violations": {
+      "label": "Health-based violations",
+      "definition": "Violations of a health-based standard, as distinct from monitoring or reporting failures.",
+      "unit": "count",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No health-based violation record was matched to this ZIP. Not a finding that the water met every standard.",
+      "caveats": []
+    },
+    "unresolved_violations": {
+      "label": "Unresolved violations",
+      "definition": "Violations recorded as still open rather than returned to compliance.",
+      "unit": "count",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No open-violation record was matched to this ZIP.",
+      "caveats": []
+    },
+    "enforcement_action_count": {
+      "label": "Enforcement actions",
+      "definition": "Formal or informal enforcement actions recorded against the system.",
+      "unit": "count",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No enforcement record was matched to this ZIP.",
+      "caveats": ["An enforcement action means a regulator responded. Its absence does not mean nothing happened."]
+    },
+    "enforcement_health_violations": {
+      "label": "Enforcement actions on health violations",
+      "definition": "The subset of enforcement actions tied to health-based violations.",
+      "unit": "count",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No such record was matched to this ZIP.",
+      "caveats": []
+    },
+    "has_active_issues": {
+      "label": "Active issues flag",
+      "definition": "Whether the source flags the system as currently having active issues.",
+      "unit": "boolean",
+      "upstream": "ZipCheckup, derived from EPA SDWIS status",
+      "threshold": null,
+      "what_missing_means": "The flag is not set for this ZIP, which is not the same as being set to false.",
+      "caveats": []
+    },
+    "contaminant_count": {
+      "label": "Contaminants recorded",
+      "definition": "Number of distinct contaminants recorded in violation for the system.",
+      "unit": "count",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No contaminant records were matched to this ZIP.",
+      "caveats": ["Counts contaminants that appear in violation records, not everything present in the water."]
+    },
+    "health_contaminant_names": {
+      "label": "Health-relevant contaminants",
+      "definition": "Names of contaminants tied to health-based violations.",
+      "unit": "list",
+      "upstream": "EPA SDWIS",
+      "threshold": null,
+      "what_missing_means": "No named health contaminant was matched to this ZIP.",
+      "caveats": ["Free text from the upstream record; wording varies between states."]
+    },
+    "home_safety_score": {
+      "label": "Home safety score",
+      "definition": "Composite 0-100 score published by ZipCheckup.",
+      "unit": "index 0-100",
+      "upstream": "ZipCheckup composite",
+      "threshold": {
+        "status": "not_applicable",
+        "reason": "A vendor composite with no statutory threshold. It is not an EPA metric and no regulation defines a passing value."
+      },
+      "what_missing_means": "No score was computed for this ZIP. It is not a score of 0 and not a grade of F.",
+      "caveats": ["The inputs and weights behind the composite are not documented in the open dataset, so the score should not be treated as a measurement."]
+    },
+    "home_safety_grade": {
+      "label": "Home safety grade",
+      "definition": "Letter grade A-F corresponding to the composite score.",
+      "unit": "grade A-F",
+      "upstream": "ZipCheckup composite",
+      "threshold": { "status": "not_applicable", "reason": "Derived from the composite score; no statutory basis." },
+      "what_missing_means": "No grade was computed for this ZIP.",
+      "caveats": ["Present exactly when home_safety_score is present."]
+    },
+    "boil_water_advisories": {
+      "label": "Boil-water advisories",
+      "definition": "Count of boil-water advisories issued for the system.",
+      "unit": "count",
+      "upstream": "declared in the source schema",
+      "threshold": null,
+      "what_missing_means": "This column exists in the source schema but is empty for every row of the snapshot, so the dataset carries no advisory information at all.",
+      "caveats": ["Shipped deliberately as a permanent unknown: telling an agent the field exists and is empty is safer than omitting it and letting the agent assume none were issued."]
+    }
+  }
+}
