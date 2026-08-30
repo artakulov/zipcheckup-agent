@@ -5,7 +5,9 @@
   "description": "US home environmental risk data exposed as WebMCP tools an AI agent can call directly, with source, measurement date and an explicit unknown for every missing value.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "serve": "npx --yes serve web -l 4173",
     "build:data": "node scripts/build-data.mjs",
@@ -13,6 +15,10 @@
     "vendor:polyfill": "node scripts/vendor-polyfill.mjs",
     "test": "node --test test/",
     "smoke": "node scripts/smoke.mjs",
-    "deploy": "npx --yes wrangler pages deploy web --project-name=zipcheckup-agent"
+    "deploy": "npx --yes wrangler pages deploy web --project-name=zipcheckup-agent",
+    "bridge": "node scripts/mcp-bridge.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2"
   }
 }
