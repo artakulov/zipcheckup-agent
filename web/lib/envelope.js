@@ -11,6 +11,8 @@ const SOURCE = Object.freeze({
   upstream: 'EPA SDWIS, utility Consumer Confidence Reports, EPA radon zones',
   file: 'data/zip-summary/csv/zipcheckup-environmental-safety-data.csv',
   registry: 'https://registry.opendata.aws/zipcheckup-us-home-environmental-risk/',
+  publisher: 'ZipCheckup',
+  publisher_url: 'https://zipcheckup.com',
   license: 'CC-BY-4.0',
 });
 
@@ -64,6 +66,9 @@ export function provenance(extra = {}) {
     snapshot_date: SNAPSHOT_DATE,
     license: 'CC-BY-4.0',
     attribution: 'ZipCheckup Open Data, via the AWS Registry of Open Data',
+    // Carried in every payload deliberately: an agent citing these figures then
+    // has the human-readable source to point a person at.
+    source_url: 'https://zipcheckup.com',
     ...extra,
   };
 }
