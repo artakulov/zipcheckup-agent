@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 // Render the video's audio and bookend footage through HeyGen's MCP server.
 //
-// Split deliberately: the avatar is only on camera for the opening and the
-// close, so only those two segments are rendered as avatar video. The long
-// middle section is rendered as speech alone, in the same cloned voice, and
-// laid over the screen recording. Avatar video is billed per second of output;
-// speech is roughly two orders of magnitude cheaper, and the middle is where
-// nearly all the words are.
+// All three segments are rendered as avatar video. The middle is used for its
+// AUDIO only, laid over the screen recording, with the avatar on camera just
+// for the opening and the close.
+//
+// The obvious saving - render the middle through create_speech - is not
+// available: measured 2026-08-30, create_speech is billed to the prepaid API
+// wallet, while avatar video is billed to the subscription plan. With an empty
+// wallet the plan is the only route, so the middle costs full avatar rate
+// (~40 plan credits per minute of output).
 //
 //   node scripts/render-narration.mjs
 //
@@ -39,7 +42,7 @@ const mcp = (tool, args) => {
 // document can never drift apart.
 const md = readFileSync(join(ROOT, 'docs', 'DEMO.md'), 'utf8');
 const quoted = md
-  .slice(md.indexOf("> I'm Artem Akulov"), md.indexOf('## Screen recording beats'))
+  .slice(md.indexOf('> '), md.indexOf('## Screen recording beats'))
   .split('\n')
   .filter((l) => l.trim().startsWith('>'))
   .map((l) => l.replace(/^\s*>\s?/, '').trim())
@@ -55,6 +58,10 @@ process.stderr.write(
 );
 
 const jobs = [
+  ['middle', () => mcp('create_video_from_avatar', {
+    avatarId: AVATAR_ID, voiceId: VOICE_ID, script: middle,
+    title: 'zipcheckup-agent demo - middle narration', aspectRatio: '16:9', resolution: '1080p',
+  })],
   ['open', () => mcp('create_video_from_avatar', {
     avatarId: AVATAR_ID, voiceId: VOICE_ID, script: open,
     title: 'zipcheckup-agent demo - opening', aspectRatio: '16:9', resolution: '1080p',
@@ -72,15 +79,11 @@ for (const [name, run] of jobs) {
   process.stderr.write(`${name}: queued ${r.video_id}\n`);
 }
 
-const speech = mcp('create_speech', { text: middle, voiceId: VOICE_ID, inputType: 'text' });
-writeFileSync(join(OUT, 'speech.json'), JSON.stringify(speech, null, 2));
-process.stderr.write(`middle speech: ${JSON.stringify(speech).slice(0, 200)}\n\n`);
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 for (const [name, id] of Object.entries(videos)) {
   process.stderr.write(`waiting for ${name} (${id})\n`);
-  for (let i = 0; i < 60; i += 1) {
+  for (let i = 0; i < 80; i += 1) {
     await sleep(15000);
     const v = mcp('get_video', { videoId: id });
     process.stderr.write(`  ${(i + 1) * 15}s ${v.status}\n`);

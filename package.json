@@ -18,7 +18,8 @@
     "deploy": "npx --yes wrangler pages deploy web --project-name=zipcheckup-agent",
     "bridge": "node scripts/mcp-bridge.mjs",
     "build:docs": "node scripts/build-docs.mjs",
-    "record:demo": "node scripts/record-demo.mjs"
+    "record:demo": "node scripts/record-demo.mjs",
+    "plan:cues": "node scripts/plan-cues.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"
